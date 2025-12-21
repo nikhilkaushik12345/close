@@ -24,14 +24,13 @@ app.post("/exchange", async (req, res) => {
     const params = new URLSearchParams();
     params.append("grant_type", "authorization_code");
     params.append("code", code);
-    params.append("redirect_uri", "https://asdasd.onrender.com/callback");
-    params.append("client_id", "oa2client_25pmFXVtQu4Daxln5bjcMO");
+    params.append("redirect_uri", "https://close-oyjq.onrender.com/callback");
+    params.append("client_id", "oa2client_4dT3wSbkIPZXhqlCptWNjg");
     params.append(
       "client_secret",
-      "CBM7M4qFe7vy9pMUW4uQcRivGtNIZ4QbdFZ6gqdlDVzhQnRx"
+      "ZZDiFnb2It6LP5p1VsQ3IK7HL1KYrrI7VqrF2yqQqTod6ep4"
     );
 
-    // 1️⃣ Exchange authorization code for access token
     const tokenRes = await fetch("https://api.close.com/oauth2/token/", {
       method: "POST",
       headers: {
@@ -44,7 +43,6 @@ app.post("/exchange", async (req, res) => {
     const token = await tokenRes.json();
     if (!token.access_token) return res.status(400).json(token);
 
-    // 2️⃣ List all leads
     const listRes = await fetch("https://mcp.close.com/mcp", {
       method: "POST",
       headers: {
@@ -73,7 +71,6 @@ app.post("/exchange", async (req, res) => {
     const leads =
       listData?.result?.structuredContent?.results?.results || [];
 
-    // 3️⃣ Delete each lead one by one
     const deleted = [];
 
     for (const lead of leads) {

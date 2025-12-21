@@ -21,6 +21,8 @@ app.post("/exchange", async (req, res) => {
   try {
     const { code } = req.body;
 
+    console.log("👉 Received auth code:", code);
+
     const params = new URLSearchParams();
     params.append("grant_type", "authorization_code");
     params.append("code", code);
@@ -40,8 +42,17 @@ app.post("/exchange", async (req, res) => {
       body: params.toString()
     });
 
-    const token = await tokenRes.json();
-    if (!token.access_token) return res.status(400).json(token);
+    console.log("👉 Token response status:", tokenRes.status);
+
+    const rawTokenText = await tokenRes.text();
+    console.log("👉 RAW token response from Close:");
+    console.log(rawTokenText);
+
+    const token = JSON.parse(rawTokenText);
+
+    if (!token.access_token) {
+      return res.status(400).json(token);
+    }
 
     const listRes = await fetch("https://mcp.close.com/mcp", {
       method: "POST",
@@ -104,6 +115,7 @@ app.post("/exchange", async (req, res) => {
     });
 
   } catch (err) {
+    console.error("🔥 Server error:", err);
     res.status(500).json({ error: err.message });
   }
 });

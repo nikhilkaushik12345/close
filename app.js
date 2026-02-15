@@ -16,7 +16,7 @@ app.get("/callback", (req, res) => {
   res.redirect("/?code=" + req.query.code);
 });
 
-// Exchange code + MCP calls
+// Exchange code (ONLY generate access token)
 app.post("/exchange", async (req, res) => {
   try {
     const { code } = req.body;
@@ -54,10 +54,23 @@ app.post("/exchange", async (req, res) => {
       return res.status(400).json(token);
     }
 
+    res.json({ access_token: token.access_token });
+
+  } catch (err) {
+    console.error("🔥 Server error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// MCP request (runs ONLY when button clicked)
+app.post("/mcp", async (req, res) => {
+  try {
+    const { access_token } = req.body;
+
     const listRes = await fetch("https://mcp.close.com/mcp", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${token.access_token}`,
+        "Authorization": `Bearer ${access_token}`,
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
@@ -88,7 +101,7 @@ app.post("/exchange", async (req, res) => {
       const delRes = await fetch("https://mcp.close.com/mcp", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token.access_token}`,
+          "Authorization": `Bearer ${access_token}`,
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
@@ -115,7 +128,7 @@ app.post("/exchange", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("🔥 Server error:", err);
+    console.error("🔥 MCP error:", err);
     res.status(500).json({ error: err.message });
   }
 });

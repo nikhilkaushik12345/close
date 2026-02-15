@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login with Close</title>
 <script>
+let storedToken = null;
+
 function getAuthorizationCodeFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('code');
@@ -19,19 +21,39 @@ function loginWithClose() {
   window.location.href = authUrl;
 }
 
-async function getAccessToken(code) {
+async function exchangeCode(code) {
   try {
     const res = await fetch("/exchange", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code })
     });
+
     const data = await res.json();
-    document.getElementById("authorization-code").textContent = "Access Token Processed";
-    document.getElementById("user-info").textContent = JSON.stringify(data, null, 2);
+
+    if (data.access_token) {
+      storedToken = data.access_token;
+      document.getElementById("authorization-code").textContent = "Access Token Generated";
+    } else {
+      document.getElementById("authorization-code").textContent = JSON.stringify(data);
+    }
+
   } catch (err) {
     document.getElementById("authorization-code").textContent = "Error: " + err;
   }
+}
+
+async function sendRequest() {
+  if (!storedToken) return;
+
+  const res = await fetch("/mcp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ access_token: storedToken })
+  });
+
+  const data = await res.json();
+  document.getElementById("user-info").textContent = JSON.stringify(data, null, 2);
 }
 
 window.onload = () => {
@@ -40,14 +62,16 @@ window.onload = () => {
     loginWithClose();
     return;
   }
+
   document.getElementById("authorization-code").textContent = "Authorization Code: " + code;
-  getAccessToken(code);
+  exchangeCode(code);
 };
 </script>
 </head>
 <body>
 <h1>Login with Close</h1>
 <button onclick="loginWithClose()">Login</button>
+<button onclick="sendRequest()">Send Request</button>
 <p id="authorization-code"></p>
 <h2>Response</h2>
 <pre id="user-info"></pre>
